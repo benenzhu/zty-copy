@@ -3,19 +3,71 @@
   "displayName": "zty-copy",
   "description": "",
   "version": "0.0.1",
+  "extensionKind": [
+    "workspace"
+  ],
   "engines": {
-    "vscode": "^1.86.0"
+    "vscode": "^1.51.0"
   },
+  "keywords": [
+    "copy",
+    "file path",
+    "line number",
+    "clipboard"
+  ],
   "categories": [
     "Other"
   ],
-  "activationEvents": [],
+  "activationEvents": [
+    "onCommand:copy-relative-path-and-line-numbers.both",
+    "onCommand:copy-relative-path-and-line-numbers.path-only"
+  ],
   "main": "./extension.js",
   "contributes": {
-    "commands": [{
-      "command": "zty-copy.helloWorld",
-      "title": "Hello World"
-    }]
+    "keybindings": [
+      {
+        "command": "copy-relative-path-and-line-numbers.both",
+        "key": "alt+l",
+        "mac": "ctrl+l",
+        "when": "editorTextFocus"
+      }
+    ],
+    "commands": [
+      {
+        "command": "copy-relative-path-and-line-numbers.both",
+        "title": "Copy Relative Path and Line Numbers"
+      },
+      {
+        "command": "copy-relative-path-and-line-numbers.path-only",
+        "title": "Copy Relative Path"
+      }
+    ],
+    "menus": {
+      "explorer/context": [
+        {
+          "command": "copy-relative-path-and-line-numbers.both"
+        },
+        {
+          "command": "copy-relative-path-and-line-numbers.path-only"
+        }
+      ],
+      "editor/title/context": [
+        {
+          "command": "copy-relative-path-and-line-numbers.both"
+        },
+        {
+          "command": "copy-relative-path-and-line-numbers.path-only"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "copy-relative-path-and-line-numbers.both"
+        },
+        {
+          "command": "copy-relative-path-and-line-numbers.path-only"
+        }
+      ]
+    }
   },
   "scripts": {
     "lint": "eslint .",

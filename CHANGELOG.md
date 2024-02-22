@@ -1,9 +1,9 @@
-# Change Log
+# Changelog
 
-All notable changes to the "zty-copy" extension will be documented in this file.
+## 0.3.0
 
-Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
+Add support for Windows WSL
 
-## [Unreleased]
+## 0.2.8
 
-- Initial release
+Show an alert message when the file path is not accessible (e.g. `Untitled-1`).
