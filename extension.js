@@ -24,17 +24,46 @@ function activate(context) {
 		let match = regex.exec(lineText);
 		let url = match ? match[2] : null;
 		let linenum = parseInt(url.split(":")[1]) - 1;
+		urlbackup = url;
 		url = url.split(":")[0];
 		let workspaceFoler = vscode.workspace.rootPath;
 		let absolutePath = path.resolve(workspaceFoler, url);
 		if (url) {
+			
+			vscode.workspace.fs.readFile(vscode.Uri.parse(absolutePath)).then((data) => {
+				lines = data.toString();
+			}).catch(error => {
+				vscode.window.showErrorMessage('Error reading file: ' + error);
+			})
+			// url 结构 path:100#line▪️line xx
+			// vscode.window.showInformationMessage(lines)
+			if(urlbackup.includes("#") && lines){
+				codeline = urlbackup.split("#")[1].replace(/▪️/g, " ");
+				lines = lines.split("\n");
+				for(let i = 0; i < lines.length; i++){
+					if(linenum - i >= 0){
+						if(lines[linenum - i].includes(codeline)){
+							linenum = linenum - i;
+							vscode.window.showWarningMessage(linenum, "use line num here", linenum);
+							break;
+						}
+					}
+					if(linenum + i < lines.length){
+						if(lines[linenum + i].includes(codeline)){
+							linenum = linenum + i;
+							vscode.window.showWarningMessage(linenum, "use line num here", linenum);
+							break;
+						}
+					}
+				}
+			}
 			let uri = vscode.Uri.file(absolutePath);
 			let line = new vscode.Position(linenum,0)
 			let options = {
 				selection: new vscode.Range(line, line)
 			}
-		  	vscode.window.showWarningMessage(uri);
-		  	vscode.window.showWarningMessage(linenum);
+			vscode.window.showWarningMessage(uri);
+			vscode.window.showWarningMessage(linenum);
 			vscode.commands.executeCommand('workbench.action.focusLeftGroup').then(() => {
 				vscode.commands.executeCommand('vscode.open', uri, options);
 			});
@@ -83,7 +112,6 @@ function activate(context) {
 		  });
 		  if (withSelectedText){
 			let selectedText = editor.document.getText(editor.selection);
-			const editor = vscode.window.activeTextEditor;
 			let line = editor.document.getText().split("\n")[lineNumbers[0]-1].trim()
 			// line .strip and replace space with a unormal unicode char like ▪️
 			line = line.replace(/\s/g, "▪️");
