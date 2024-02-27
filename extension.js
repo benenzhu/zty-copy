@@ -1,11 +1,55 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 const vscode = require("vscode");
+const path = require("path");
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 function activate(context) {
-	let copyPathLines = function (withLineNumber = false) {
+	let gotoSelectFileWithLineNumber = function () {
+
+		let editor = vscode.window.activeTextEditor;
+		let doc = editor.document;
+		// let path = vscode.workspace.asRelativePath(doc.fileName);
+		let lineNumbers = [];
+	
+		editor.selections.forEach((selection) => {
+			lineNumbers.push(selection.active.line + 1);
+		});
+		// let selectedText = editor.document.getText(editor.selection);
+		let currentLine = editor.selection.active.line;
+		let lineText = editor.document.lineAt(currentLine).text;
+
+		let regex = /\[(.*?)\]\((.*?)\)/g;
+		let match = regex.exec(lineText);
+		let url = match ? match[2] : null;
+		let linenum = parseInt(url.split(":")[1]) - 1;
+		url = url.split(":")[0];
+		let workspaceFoler = vscode.workspace.rootPath;
+		let absolutePath = path.resolve(workspaceFoler, url);
+		if (url) {
+			let uri = vscode.Uri.file(absolutePath);
+			let line = new vscode.Position(linenum,0)
+			let options = {
+				selection: new vscode.Range(line, line)
+			}
+		  	vscode.window.showWarningMessage(uri);
+		  	vscode.window.showWarningMessage(linenum);
+			vscode.commands.executeCommand('workbench.action.focusLeftGroup').then(() => {
+				vscode.commands.executeCommand('vscode.open', uri, options);
+			});
+
+		} else {
+			vscode.window.showErrorMessage('No URL found in the selected text.');
+		}
+		// let uri = vscode.Uri.file("/Users/z/code/tensorflow/tensorflow/java/BUILD");
+		// let line = new vscode.Position(100,0)
+		// let options = {
+		// 	selection: new vscode.Range(line, line)
+		// }
+		// vscode.commands.executeCommand('vscode.open', uri, options);
+	}
+	let copyPathLines = function (withLineNumber = false, withSelectedText = false) {
 		let alertMessage = "File path not found!";
 		if (!vscode.workspace.rootPath) {
 		  vscode.window.showWarningMessage(alertMessage);
@@ -37,6 +81,14 @@ function activate(context) {
 			  );
 			}
 		  });
+		  if (withSelectedText){
+			let selectedText = editor.document.getText(editor.selection);
+			const editor = vscode.window.activeTextEditor;
+			let line = editor.document.getText().split("\n")[lineNumbers[0]-1].trim()
+			// line .strip and replace space with a unormal unicode char like ▪️
+			line = line.replace(/\s/g, "▪️");
+			return "[" + selectedText + "](" + path + ":" + lineNumbers.join(",") +"#" + line +  ")";
+		  }
 	
 		  return path + ":" + lineNumbers.join(",");
 		} else {
@@ -57,6 +109,7 @@ function activate(context) {
 		'Congratulations, your extension "copy-relative-path-and-line-numbers" is now active!'
 	);
 
+
 	// The command has been defined in the package.json file
 	// Now provide the implementation of the command with  registerCommand
 	// The commandId parameter must match the command field in package.json
@@ -75,7 +128,7 @@ function activate(context) {
 	  let cmdPathOnly = vscode.commands.registerCommand(
 		"copy-relative-path-and-line-numbers.path-only",
 		() => {
-		  let message = copyPathLines();
+		  let message = copyPathLines(true, true);
 		  if (message !== false) {
 			vscode.env.clipboard.writeText(message).then(() => {
 			  toast(message);
@@ -84,7 +137,20 @@ function activate(context) {
 		}
 	  );
 
-	  context.subscriptions.push(cmdBoth, cmdPathOnly);
+
+	  let cmdPathOnly2 = vscode.commands.registerCommand(
+		"copy-relative-path-and-line-numbers.zztest",
+		() => {
+		  let message = gotoSelectFileWithLineNumber();
+		  if (message !== false) {
+			vscode.env.clipboard.writeText(message).then(() => {
+			  toast(message);
+			});
+		  }
+		}
+	  );
+
+	  context.subscriptions.push(cmdBoth, cmdPathOnly, cmdPathOnly2);
 }
 exports.activate = activate;
 

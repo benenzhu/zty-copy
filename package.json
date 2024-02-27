@@ -2,13 +2,17 @@
   "name": "zty-copy",
   "displayName": "zty-copy",
   "description": "",
-  "version": "0.0.1",
+  "version": "0.0.5",
   "extensionKind": [
     "workspace"
   ],
   "engines": {
     "vscode": "^1.51.0"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/clangd/vscode-clangd.git"
+},
   "keywords": [
     "copy",
     "file path",
@@ -40,12 +44,19 @@
       {
         "command": "copy-relative-path-and-line-numbers.path-only",
         "title": "Copy Relative Path"
+      },
+      {
+        "command": "copy-relative-path-and-line-numbers.zztest",
+        "title": "Copy Relative Path zztest"
       }
     ],
     "menus": {
       "explorer/context": [
         {
           "command": "copy-relative-path-and-line-numbers.both"
+        },
+        {
+          "command": "copy-relative-path-and-line-numbers.zztest"
         },
         {
           "command": "copy-relative-path-and-line-numbers.path-only"
@@ -56,12 +67,18 @@
           "command": "copy-relative-path-and-line-numbers.both"
         },
         {
+          "command": "copy-relative-path-and-line-numbers.zztest"
+        },
+        {
           "command": "copy-relative-path-and-line-numbers.path-only"
         }
       ],
       "editor/context": [
         {
           "command": "copy-relative-path-and-line-numbers.both"
+        },
+        {
+          "command": "copy-relative-path-and-line-numbers.zztest"
         },
         {
           "command": "copy-relative-path-and-line-numbers.path-only"
@@ -75,7 +92,7 @@
     "test": "vscode-test"
   },
   "devDependencies": {
-    "@types/vscode": "^1.86.0",
+    "@types/vscode": "^1.51.0",
     "@types/mocha": "^10.0.6",
     "@types/node": "18.x",
     "eslint": "^8.56.0",
