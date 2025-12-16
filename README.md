@@ -1,6 +1,6 @@
 # zty-copy README
 
-This is the README for your extension "zty-copy". After writing up a brief description, we recommend including the following sections.
+After writing up a brief description, we recommend including the following sections.
 
 ## Features
 

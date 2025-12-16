@@ -7,29 +7,52 @@ const path = require("path");
 // your extension is activated the very first time the command is executed
 function activate(context) {
 	let gotoSelectFileWithLineNumber = function () {
-
 		let editor = vscode.window.activeTextEditor;
 		let doc = editor.document;
 		// let path = vscode.workspace.asRelativePath(doc.fileName);
 		let lineNumbers = [];
 	
 		editor.selections.forEach((selection) => {
-			lineNumbers.push(selection.active.line + 1);
+			lineNumbers.push(selection.active.line + 1); // 好像没用?
 		});
 		// let selectedText = editor.document.getText(editor.selection);
 		let currentLine = editor.selection.active.line;
 		let lineText = editor.document.lineAt(currentLine).text;
 
-		let regex = /\[(.*?)\]\((.*?)\)/g;
+		let regex = /\[(.*?)\]\((.*?)\)/g; // [.*](.*) 用来捕获 markdown 的链接
 		let match = regex.exec(lineText);
 		let url = match ? match[2] : null;
-		let linenum = parseInt(url.split(":")[1]) - 1;
+		let linenum = null;
+		let jump_direct = false;
+		if (!url){
+			// Check if the file path is accessible
+			if (doc.isUntitled) {
+				vscode.window.showErrorMessage('Cannot process untitled files. Please save the file first.');
+				return;
+			}
+			
+			// Try to extract URL and line number from the current line using a different pattern
+			// Looking for patterns like: File "/path/to/file.js", line 153, in some_function
+			// 用于匹配 File "/path/to/file.js", line 153, in some_function
+			let filePathRegex = /File\s+"([^"]+)",\s+line\s+(\d+)/;
+			let filePathMatch = filePathRegex.exec(lineText);
+			
+			if (filePathMatch) {
+				url = filePathMatch[1];
+				linenum = parseInt(filePathMatch[2]) - 1;
+				jump_direct = true;
+			} else {
+				vscode.window.showErrorMessage('No valid file path and line number found in the selected text.');
+				return;
+			}
+		}else{
+			linenum = parseInt(url.split(":")[1]) - 1;
+		}
 		urlbackup = url;
 		url = url.split(":")[0];
 		let workspaceFoler = vscode.workspace.rootPath;
 		let absolutePath = path.resolve(workspaceFoler, url);
 		if (url) {
-			
 			vscode.workspace.fs.readFile(vscode.Uri.parse(absolutePath)).then((data) => {
 				lines = data.toString();
 			}).catch(error => {
@@ -38,7 +61,12 @@ function activate(context) {
 			// url 结构 path:100#line▪️line xx
 			// vscode.window.showInformationMessage(lines)
 			if(urlbackup.includes("#") && lines){
-				codeline = urlbackup.split("#")[1].replace(/▪️/g, " ");
+				// line = line.replace(/\(/g, "%l%").replace(/\)/g, "%r%")
+				urlbackup = urlbackup.replace(/%l%/g, "(").replace(/%r%/g, ")")
+				vscode.window.showInformationMessage(urlbackup)
+				codeline = urlbackup.split("#")[1].replace(/▪️/g, " ").split("⬇️")[0]
+				tmp = codeline.split("☺️")
+				codeline = tmp[tmp.length - 1];
 				lines = lines.split("\n");
 				for(let i = 0; i < lines.length; i++){
 					if(linenum - i >= 0){
@@ -106,7 +134,8 @@ function activate(context) {
 			  lineNumbers.push(selection.active.line + 1);
 			} else {
 			  lineNumbers.push(
-				selection.start.line + 1 + "~" + (selection.end.line + 1)
+				selection.start.line + 1
+					// + "~" + (selection.end.line + 1)
 			  );
 			}
 		  });
@@ -115,7 +144,31 @@ function activate(context) {
 			let line = editor.document.getText().split("\n")[lineNumbers[0]-1].trim()
 			// line .strip and replace space with a unormal unicode char like ▪️
 			line = line.replace(/\s/g, "▪️");
-			return "[" + selectedText + "](" + path + ":" + lineNumbers.join(",") +"#" + line +  ")";
+			let brace = 0
+			for(let i = 0; i < line.length; i++){	
+				if(line[i] == "("){
+					brace += 1
+				}else if(line[i] == ")"){
+					brace -= 1
+				}
+			}
+			for(let i = 0; i < brace; i++){
+				line += "⬇️)"
+			}
+			if(brace < 0){
+				for(let i = 0; i < -brace; i++)	{
+					line = "(☺️" + line
+				}
+			}
+			vscode.window.showInformationMessage(line);
+			// line = line.replace("(", "%l%").replace(")", "%r%")
+			line = line.replace(/\(/g, "%l%").replace(/\)/g, "%r%")
+			vscode.window.showInformationMessage(line);
+			
+			  // ()()()
+			selectedText = selectedText.trim();	
+			ret = "[`" + selectedText + "`](" + path + ":" + lineNumbers.join(",") +"#" + line +  ")";
+			return ret;
 		  }
 	
 		  return path + ":" + lineNumbers.join(",");
