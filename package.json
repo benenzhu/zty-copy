@@ -34,8 +34,31 @@
         "key": "alt+l",
         "mac": "ctrl+l",
         "when": "editorTextFocus"
+      },
+      {
+        "command": "copy-relative-path-and-line-numbers.zztest",
+        "key": "ctrl+9",
+        "mac": "cmd+9",
+        "when": "editorTextFocus"
       }
     ],
+    "configuration": {
+      "title": "ZTY Copy",
+      "properties": {
+        "zty-copy.pathPrefixMap": {
+          "type": "object",
+          "default": {
+            "vllm/": "/usr/local/lib/python3.12/dist-packages/vllm/",
+            "aiter/": "/usr/local/lib/python3.12/dist-packages/aiter/",
+            "torch/": "/usr/local/lib/python3.12/dist-packages/torch/"
+          },
+          "description": "Map of relative path prefixes to absolute paths. When a file path starts with a key (e.g. 'vllm/'), it will be resolved to the corresponding absolute path.",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
+    },
     "commands": [
       {
         "command": "copy-relative-path-and-line-numbers.both",

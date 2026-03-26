@@ -42,16 +42,45 @@ function activate(context) {
 				linenum = parseInt(filePathMatch[2]) - 1;
 				jump_direct = true;
 			} else {
-				vscode.window.showErrorMessage('No valid file path and line number found in the selected text.');
-				return;
+				// Match bare path like /usr/lib/foo.py:123 or vllm/foo.py:123 or aiter/foo.py:123
+				let barePathRegex = /((?:\/)?[\w.\-\/]+\.py):(\d+)/;
+				let barePathMatch = barePathRegex.exec(lineText);
+				if (barePathMatch) {
+					url = barePathMatch[1];
+					// Resolve known relative package paths to absolute
+					if (!url.startsWith("/")) {
+						const prefixMap = vscode.workspace.getConfiguration('zty-copy').get('pathPrefixMap', {});
+						for (const [prefix, absPrefix] of Object.entries(prefixMap)) {
+							if (url.startsWith(prefix)) {
+								url = absPrefix + url.slice(prefix.length);
+								break;
+							}
+						}
+					}
+					linenum = parseInt(barePathMatch[2]) - 1;
+					jump_direct = true;
+				} else {
+					vscode.window.showErrorMessage('No valid file path and line number found in the selected text.');
+					return;
+				}
 			}
 		}else{
 			linenum = parseInt(url.split(":")[1]) - 1;
 		}
 		urlbackup = url;
 		url = url.split(":")[0];
+		// Resolve known relative package paths to absolute
+		const prefixMap = vscode.workspace.getConfiguration('zty-copy').get('pathPrefixMap', {});
+		if (!url.startsWith("/")) {
+			for (const [prefix, absPrefix] of Object.entries(prefixMap)) {
+				if (url.startsWith(prefix)) {
+					url = absPrefix + url.slice(prefix.length);
+					break;
+				}
+			}
+		}
 		let workspaceFoler = vscode.workspace.rootPath;
-		let absolutePath = path.resolve(workspaceFoler, url);
+		let absolutePath = url.startsWith("/") ? url : path.resolve(workspaceFoler, url);
 		if (url) {
 			vscode.workspace.fs.readFile(vscode.Uri.parse(absolutePath)).then((data) => {
 				lines = data.toString();
